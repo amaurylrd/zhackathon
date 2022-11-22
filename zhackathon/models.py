@@ -31,3 +31,4 @@ class Festival(Model):
     class Meta:
         ordering = ["start_date"]
         db_table = "festival"
+        app_label = "festival"
