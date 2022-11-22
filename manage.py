@@ -6,7 +6,6 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoProjectsBase.settings')
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "zhackathon.settings")
     try:
         from django.core.management import execute_from_command_line
