@@ -1,6 +1,5 @@
-from datetime import date
-
 from django.core.validators import RegexValidator
+from django.db import models
 from django.db.models import Model
 from django.db.models.fields import (
     CharField,
@@ -32,3 +31,50 @@ class Festival(Model):
         ordering = ["start_date"]
         db_table = "festival"
         app_label = "festival"
+
+
+class UserBase(Model):
+    id = CharField(primary_key=True, max_length=100)
+    name = CharField(max_length=100)
+    password = CharField(max_length=100)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "users"
+        app_label = "users"
+
+    def __str__(self):
+        return self.name
+
+
+class Admin(UserBase):
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "users"
+        app_label = "admin"
+
+
+class User(UserBase):
+    favourites = models.ManyToManyField(Festival)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "users"
+        app_label = "user"
+
+
+class Comments(Model):
+    id = CharField(primary_key=True, max_length=100)
+    sender = models.ForeignKey(UserBase, on_delete=models.SET_NULL, null=True)
+    festival = models.ForeignKey(Festival, on_delete=models.SET_NULL, null=True)
+    date = DateField
+    text = CharField(max_length=5000)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "comments"
+        app_label = "comment"
+
+    def __str__(self):
+        return self.text
