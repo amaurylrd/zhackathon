@@ -14,7 +14,7 @@
     "python.linting.pylintEnabled": true,
     "python.linting.pylintArgs": [
         "--load-plugins=pylint_django",
-        "--disable=django-not-configured",
+        "--disable=django-not-configured,imported-auth-user",
         "--django-settings-module=zhackathon.settings",
         "--disable=missing-module-docstring,missing-function-docstring,missing-class-docstring",
         "--ignore-patterns=(.)*_test.py,test_(.)*.py",

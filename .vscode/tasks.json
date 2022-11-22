@@ -1,0 +1,9 @@
+{
+    "version": "2.0.0",
+    "tasks": [{
+        "label": "migrate",
+        "command": "sh",
+        "args": ["migrate.sh"],
+        "type": "shell"
+    }]
+}
