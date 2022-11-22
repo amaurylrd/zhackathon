@@ -1,0 +1,37 @@
+{
+    "configurations": [
+        {
+            "name": "Django makemigrations",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "console": "integratedTerminal",
+            "django": true,
+            "args": [
+                "makemigrations",
+            ],
+        },
+        {
+            "name": "Django migrate",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "console": "integratedTerminal",
+            "django": true,
+            "args": [
+                "migrate",
+            ],
+        },
+        {
+            "name": "Django runserver",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "console": "integratedTerminal",
+            "django": true,
+            "args": [
+                "runserver",
+            ],
+        }
+    ]
+}

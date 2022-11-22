@@ -8,15 +8,15 @@ class FestivalSerializer(ModelSerializer):
         model = Festival
         fields = (
             "identifiant",
-            "name",
-            "description",
-            "start_date",
-            "end_date",
-            "location",
-            "website",
-            "logo",
-            "banner",
-            "created_at",
-            "updated_at",
-            "deleted_at",
+            # "name", fields = '__all__'
+            # "description",
+            # "start_date",
+            # "end_date",
+            # "location",
+            # "website",
+            # "logo",
+            # "banner",
+            # "created_at",
+            # "updated_at",
+            # "deleted_at",
         )
