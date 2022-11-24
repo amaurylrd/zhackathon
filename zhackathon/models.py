@@ -56,10 +56,10 @@ class Ticketing(models.Model):
 
 
 class Comment(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     festival = models.ForeignKey(Festival, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     content = models.TextField(max_length=255)
     liked_by = models.ManyToManyField(User, related_name="comments_liked", blank=True)
@@ -71,15 +71,9 @@ class Comment(models.Model):
         self.liked_by.add(user)
         self.save()
 
-        user.comments_liked.add(self)
-        user.save()
-
     def unlike(self, user):
         self.liked_by.remove(user)
         self.save()
-
-        user.comments_liked.remove(self)
-        user.save()
 
     class Meta:
         ordering = ["-created_at"]

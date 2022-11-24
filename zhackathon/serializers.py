@@ -11,10 +11,21 @@ class EmptySerializer(serializers.Serializer):
         fields = ()
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Comment
-        fields = ("id", "author", "festival", "content")
+        fields = ["festival", "content"]
+        read_only_fields = ["author"]
+
+    def create(self, validated_data):
+        validated_data["author"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Comment
+        fields = ["content"]
 
 
 class FestivalSerializer(serializers.ModelSerializer):

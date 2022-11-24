@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 from rest_framework.decorators import action
@@ -27,7 +28,7 @@ class FestivalViewSet(viewsets.ModelViewSet):
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters
-from .filters import CommentFilterSet, CommentSearchFilter
+from .filters import CommentFilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.generics import ListCreateAPIView, UpdateAPIView, DestroyAPIView
@@ -35,68 +36,57 @@ from rest_framework.viewsets import GenericViewSet
 
 from django.contrib.auth.models import User
 
+import logging
 
-class CommentViewSet(ListCreateAPIView, UpdateAPIView, DestroyAPIView, GenericViewSet):
+logger = logging.getLogger(__name__)
+
+
+class CommentViewSet(BaseViewSet, ListCreateAPIView, UpdateAPIView, DestroyAPIView):
     queryset = models.Comment.objects.all()
-    serializer_class = serializers.CommentSerializer
+    serializer_class = serializers.CommentListSerializer
+    serializers_class = {"create": serializers.CommentDetailSerializer}
     permission_classes = (IsAuthenticated,)
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, CommentSearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_class = CommentFilterSet
     search_fields = ["festival"]
     ordering_fields = ["created_at", "updated_at"]
 
-    # TODO mettre ovveride create avec if
-    # TODO tester nos if dans put, patch, delete
+    def create(self, request, *args, **kwargs):
 
-    def put(self, request, *args, **kwargs):
-        if request.data.get("author") == self.request.user:
-            return self.update(request, *args, **kwargs)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        print(request.data, args, kwargs)
+        return self.__if_author(super().update, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self.__if_author(super().partial_update, request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return self.__if_author(super().destroy, request, *args, **kwargs)
+
+    def __if_author(self, func, request, *args, **kwargs):
+        comment = self.queryset.get(id=kwargs["pk"])
+        if comment.author == self.request.user:
+            return func(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def patch(self, request, *args, **kwargs):
-        if request.data.get("author") == self.request.user:
-            return self.partial_update(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    def delete(self, request, *args, **kwargs):
-        if request.data.get("author") == self.request.user:
-            return self.destroy(request, *args, **kwargs)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    @extend_schema(
-        description="Like comment",
-        request=serializers.CommentSerializer,
-        responses={
-            200: serializers.CommentSerializer,
-            403: serializers.CommentSerializer,
-            404: serializers.CommentSerializer,
-            412: serializers.CommentSerializer,
-        },
-    )
-    @action(detail=True, methods=["GET"])
+    @action(detail=True, methods=["POST"])
     def like(self, request, *args, **kwargs):
-        self.request.like(self.request.user)
+        comment = self.queryset.get(id=kwargs["pk"])
+        comment.like(self.request.user)
+        return Response(comment.get_total_likes())
 
-    @extend_schema(
-        description="Unlike comment",
-        request=serializers.CommentSerializer,
-        responses={
-            200: serializers.CommentSerializer,
-            403: serializers.CommentSerializer,
-            404: serializers.CommentSerializer,
-            412: serializers.CommentSerializer,
-        },
-    )
-    @action(detail=True, methods=["GET"])
+    @action(detail=True, methods=["DELETE"])
     def unlike(self, request, *args, **kwargs):
         comment = self.queryset.get(id=kwargs["pk"])
-        comment.liked_by.remove(request.user)
-        comment.save()
+        comment.unlike(self.request.user)
+        return Response(comment.get_total_likes())
 
-        return Response()
-
-
-#        self.request.unlike(self.request.user)
+    @action(detail=True, methods=["GET"])
+    def likes(self, request, *args, **kwargs):
+        comment = self.queryset.get(id=kwargs["pk"])
+        return Response(comment.get_total_likes())
 
 
 class RatingViewSet:
