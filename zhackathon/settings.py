@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework",
 ]
+
 REST_SESSION_LOGIN = False
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
@@ -41,6 +42,14 @@ REST_FRAMEWORK = {
     # "DEFAULT_AUTHENTICATION_CLASSES": [
     #     "rest_framework.authentication.SessionAuthentication",
     # ],
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "zhackathon API",
+    "DESCRIPTION": "",
+    "VERSION": "0.0.1",
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 MIDDLEWARE = [

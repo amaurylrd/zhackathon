@@ -230,7 +230,7 @@ test = ["appdirs (==1.4.4)", "pytest-cov (>=4)", "pytest-mock (>=3.10)", "pytest
 
 [[package]]
 name = "pycodestyle"
-version = "2.9.1"
+version = "2.10.0"
 description = "Python style guide checker"
 category = "dev"
 optional = false
@@ -252,7 +252,7 @@ toml = ["toml"]
 
 [[package]]
 name = "pyflakes"
-version = "2.5.0"
+version = "3.0.0"
 description = "passive checker of Python programs"
 category = "dev"
 optional = false
@@ -414,7 +414,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"
-content-hash = "fdb4c75f1059c72c623d9c8cd4ef49d3a7d69d1f86237776de82792155b380cd"
+content-hash = "adb530e2bb90eba62c3f711e8207744d92216ee281c5b2fc9ab1672cfdac608a"
 
 [metadata.files]
 asgiref = []

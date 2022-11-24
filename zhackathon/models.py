@@ -83,8 +83,8 @@ class Comment(models.Model):
 class Rating(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    festival = models.ForeignKey(Festival, on_delete=models.CASCADE)
-    rating = models.IntegerField(validators=[validators.MinValueValidator(1), validators.MaxValueValidator(5)])
+    festival = models.ForeignKey(Festival, on_delete=models.CASCADE, related_name="ratings")
+    rating = models.IntegerField(validators=[validators.MinValueValidator(0), validators.MaxValueValidator(5)])
 
     def get_average_rating(self):
         return Rating.objects.filter(festival=self.festival).aggregate(models.Avg("rating"))["rating__avg"] or None

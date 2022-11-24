@@ -11,6 +11,12 @@ class EmptySerializer(serializers.Serializer):
         fields = ()
 
 
+class FestivalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Festival
+        fields = "__all__"
+
+
 class CommentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Comment
@@ -28,10 +34,21 @@ class CommentListSerializer(serializers.ModelSerializer):
         fields = ["content"]
 
 
-class FestivalSerializer(serializers.ModelSerializer):
+class RatingListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Festival
-        fields = "__all__"
+        model = models.Rating
+        fields = ["festival"]
+
+
+class RatingDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Rating
+        fields = ["festival", "rating"]
+        read_only_fields = ["user"]
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
 
 
 # class RegisterSerializer(serializers.ModelSerializer):
