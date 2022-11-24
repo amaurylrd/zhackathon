@@ -38,6 +38,11 @@ class RatingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Rating
         fields = ["festival"]
+        read_only_fields = ["user"]
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
 
 
 class RatingDetailSerializer(serializers.ModelSerializer):
@@ -49,6 +54,20 @@ class RatingDetailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
+
+
+class AverageRatingSerializer(serializers.Serializer):
+    average = serializers.FloatField()
+
+    class Meta:
+        fields = ["average"]
+
+
+class TotalLikesSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+
+    class Meta:
+        fields = ["total"]
 
 
 # class RegisterSerializer(serializers.ModelSerializer):
