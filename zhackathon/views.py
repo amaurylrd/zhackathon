@@ -1,31 +1,26 @@
-from collections import OrderedDict
+# pylint: disable=too-many-ancestors
+
+from typing import Optional
+
 from django.contrib.auth import authenticate, login, logout
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework import permissions
-from rest_framework import filters
-from .filters import CommentFilterSet, RatingFilterSet
+from django.db.models.query import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
-
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
-
-
-from rest_framework import viewsets
-from rest_framework import generics
-from . import models
-from . import serializers
-from django.core import serializers as django_serializers
 from drf_spectacular.utils import extend_schema
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.response import Response
+
+from . import serializers
+from .filters import CommentFilterSet, RatingFilterSet
+from .models import Comment, Festival, Rating
 
 
 class BaseViewSet(viewsets.GenericViewSet):
+    serializers_class = {}
+
     def get_serializer_class(self):
         return self.serializers_class.get(self.action, self.serializer_class)
-
-
-import json
 
 
 class FestivalViewSet(BaseViewSet, viewsets.ModelViewSet):
@@ -40,7 +35,7 @@ class FestivalViewSet(BaseViewSet, viewsets.ModelViewSet):
     DELETE api/festivals/{id}/
     """
 
-    queryset = models.Festival.objects.all()
+    queryset = Festival.objects.all()
     serializer_class = serializers.FestivalSerializer
     serializers_class = {
         "rating": serializers.EmptySerializer,
@@ -51,8 +46,8 @@ class FestivalViewSet(BaseViewSet, viewsets.ModelViewSet):
     @extend_schema(responses={200: serializers.AverageRatingSerializer, 204: serializers.EmptySerializer})
     @action(detail=True, methods=["GET"])
     def rating(self, request, *args, **kwargs):
-        festival = self.get_object()
-        average = festival.get_average_rating()
+        festival: Festival = self.get_object()
+        average: Optional[int] = festival.get_average_rating()
 
         if average is None:
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -65,8 +60,8 @@ class FestivalViewSet(BaseViewSet, viewsets.ModelViewSet):
     @extend_schema(responses={200: serializers.CommentDetailSerializer})
     @action(detail=True, methods=["GET"])
     def comments(self, request, *args, **kwargs):
-        festival = self.get_object()
-        comments = festival.get_comments()
+        festival: Festival = self.get_object()
+        comments: QuerySet[Comment] = festival.get_comments()
         serializer = serializers.CommentDetailSerializer(comments, many=True)
 
         return Response(status=status.HTTP_200_OK, data=serializer.data)
@@ -74,14 +69,14 @@ class FestivalViewSet(BaseViewSet, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return self.__has_permission(super().create, request, *args, **kwargs)
 
-    def destroy(self, request, *args, **kwargs):
-        return self.__has_permission(super().destroy, request, *args, **kwargs)
-
     def update(self, request, *args, **kwargs):
         return self.__has_permission(super().update, request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+        return self.__has_permission(super().partial_update, request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        return self.__has_permission(super().destroy, request, *args, **kwargs)
 
     def __has_permission(self, func, request, *args, **kwargs):
         if self.request.user.is_staff:
@@ -102,7 +97,7 @@ class CommentViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPI
     DELETE /api/comments/{id}/unlike/
     """
 
-    queryset = models.Comment.objects.all()
+    queryset = Comment.objects.all()
     serializer_class = serializers.CommentListSerializer
     serializers_class = {
         "create": serializers.CommentDetailSerializer,
@@ -111,10 +106,36 @@ class CommentViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPI
         "likes": serializers.EmptySerializer,
     }
     permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = CommentFilterSet
     search_fields = ["festival"]
     ordering_fields = ["created_at", "updated_at"]
+
+    @extend_schema(responses={201: serializers.TotalLikesSerializer})
+    @action(detail=True, methods=["POST"])
+    def like(self, request, *args, **kwargs):
+        comment: Comment = self.get_object()
+        comment.like(self.request.user)
+        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    @extend_schema(responses={204: serializers.TotalLikesSerializer})
+    @action(detail=True, methods=["DELETE"])
+    def unlike(self, request, *args, **kwargs):
+        comment: Comment = self.get_object()
+        comment.unlike(self.request.user)
+        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
+
+    @extend_schema(responses={200: serializers.TotalLikesSerializer})
+    @action(detail=True, methods=["GET"])
+    def likes(self, request, *args, **kwargs):
+        comment: Comment = self.get_object()
+        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def update(self, request, *args, **kwargs):
         return self.__has_permission(super().update, request, *args, **kwargs)
@@ -126,64 +147,35 @@ class CommentViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPI
         return self.__has_permission(super().destroy, request, *args, **kwargs)
 
     def __has_permission(self, func, request, *args, **kwargs):
-        comment = self.get_object()
+        comment: Comment = self.get_object()
         if comment.author == self.request.user:
             return func(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @extend_schema(responses={200: serializers.TotalLikesSerializer})
-    @action(detail=True, methods=["POST"])
-    def like(self, request, *args, **kwargs):
-        comment = self.get_object()
-        comment.like(self.request.user)
-        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
-        serializer.is_valid(raise_exception=True)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    @extend_schema(responses={200: serializers.TotalLikesSerializer})
-    @action(detail=True, methods=["DELETE"])
-    def unlike(self, request, *args, **kwargs):
-        comment = self.get_object()
-        comment.unlike(self.request.user)
-        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
-        serializer.is_valid(raise_exception=True)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    @extend_schema(responses={200: serializers.TotalLikesSerializer})
-    @action(detail=True, methods=["GET"])
-    def likes(self, request, *args, **kwargs):
-        comment = self.get_object()
-        serializer = serializers.TotalLikesSerializer(data={"likes": comment.total_likes()})
-        serializer.is_valid(raise_exception=True)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
 
 class RatingViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
-    # GET /api/ratings/
-    # GET /api/ratings/?festival={id}/
-    # POST /api/ratings/
-    # DELETE /api/ratings/{id}
-    # PUT /api/ratings/{id}
-    # PATCH /api/ratings/{id}
-    queryset = models.Rating.objects.all()
+    """
+    GET api/ratings/
+    GET /api/ratings/?festival={id}/
+    POST api/ratings/
+    PUT api/ratings/{id}/
+    PATCH api/ratings/{id}/
+    DELETE api/ratings/{id}/
+    """
+
+    queryset = Rating.objects.all()
     serializer_class = serializers.RatingListSerializer
     serializers_class = {
         "create": serializers.RatingDetailSerializer,
         "update": serializers.RatingDetailSerializer,
         "partial_update": serializers.RatingDetailSerializer,
-        # "xxx": serializers.EmptySerializer,
+        "has_rated": serializers.RatingListSerializer,
     }
     permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = RatingFilterSet
     search_fields = ["festival"]
     ordering_fields = ["rating"]
-
-    # TODO faire has_rate
-    # TODO pourquoi put / patch sont en RatingListSerializer sur le site
-    # @action(detail=False, methods=["GET"])
-    # def xxx(self, request, *args, **kwargs):
-    #     return Response(status=status.HTTP_101_SWITCHING_PROTOCOLS)
 
     def update(self, request, *args, **kwargs):
         return self.__has_permission(super().update, request, *args, **kwargs)
@@ -195,7 +187,7 @@ class RatingViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPIV
         return self.__has_permission(super().destroy, request, *args, **kwargs)
 
     def __has_permission(self, func, request, *args, **kwargs):
-        rating = self.get_object()
+        rating: Rating = self.get_object()
         if rating.user == self.request.user:
             return func(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
