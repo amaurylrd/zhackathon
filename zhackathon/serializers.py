@@ -96,29 +96,3 @@ class UserLoginSerializer(serializers.Serializer):
 
     class Meta:
         fields = ("username", "password")
-
-
-# class Festival2Serializer(ModelSerializer):
-#     class Meta:
-#         model = Festival
-#         fields = "__all__"
-
-
-# class LoginSerializer(Serializer):
-#     username = CharField(write_only=True)
-#     password = CharField(write_only=True, style={"input_type": "password"}, trim_whitespace=False)
-
-#     def validate(self, attrs):
-#         username = attrs.get("username")
-#         password = attrs.get("password")
-
-#         if not username or not password:
-#             raise ValidationError({"password": _("Both 'username' and 'password' are required.")}, code="authorization")
-
-#         # todo decoder password
-#         user = authenticate(request=self.context.get("request"), username=username, password=password)
-#         if not user:
-#             raise ValidationError(_("Access denied: wrong username or password."), code="authorization")
-#         attrs["user"] = user
-
-#         return attrs

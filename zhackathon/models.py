@@ -63,13 +63,6 @@ class Ticketing(models.Model):
     def is_open(self):
         return self.status != self.Status.CLOSED
 
-    # def book_if_open(self): # TODO déplacer dans la logique
-    #     if self.is_open():
-    #         self.available_tickets -= 1
-    #         if self.available_tickets == 0:
-    #             self.status = self.Status.CLOSED
-    #         self.save()
-
     def save(self, *args, **kwargs):
         if not self.available_tickets:
             self.available_tickets = self.total_tickets
