@@ -104,6 +104,17 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-extensions"
+version = "3.2.1"
+description = "Extensions for Django"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-filter"
 version = "22.1"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
@@ -252,11 +263,19 @@ toml = ["toml"]
 
 [[package]]
 name = "pyflakes"
-version = "3.0.0"
+version = "3.0.1"
 description = "passive checker of Python programs"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "pygraphviz"
+version = "1.10"
+description = "Python interface to Graphviz"
+category = "main"
+optional = false
+python-versions = ">=3.8"
 
 [[package]]
 name = "pylama"
@@ -414,7 +433,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"
-content-hash = "adb530e2bb90eba62c3f711e8207744d92216ee281c5b2fc9ab1672cfdac608a"
+content-hash = "19f6e4a9af625f080f1c57f726a87c6764d3844d7068112befd2f7e1d0fa231f"
 
 [metadata.files]
 asgiref = []
@@ -425,6 +444,7 @@ click = []
 colorama = []
 dill = []
 django = []
+django-extensions = []
 django-filter = []
 djangorestframework = []
 drf-spectacular = []
@@ -445,6 +465,7 @@ pydocstyle = [
     {file = "pydocstyle-6.1.1.tar.gz", hash = "sha256:1d41b7c459ba0ee6c345f2eb9ae827cab14a7533a88c5c6f7e94923f72df92dc"},
 ]
 pyflakes = []
+pygraphviz = []
 pylama = []
 pylint = []
 pylint-django = []
