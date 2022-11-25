@@ -1,5 +1,8 @@
+# pylint: disable=abstract-method
+
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.utils.text import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -70,32 +73,29 @@ class TotalLikesSerializer(serializers.Serializer):
         fields = ["total"]
 
 
-# class RegisterSerializer(serializers.ModelSerializer):
-#     username = serializers.CharField(write_only=True, validators=[UniqueValidator(User.objects.all())])
-#     email = serializers.EmailField(validators=[UniqueValidator(User.objects.all())])
-#     password = serializers.CharField(write_only=True, validators=[validate_password], style={"input_type": "password"})
-#     password_confirmation = serializers.CharField(write_only=True, style={"input_type": "password"})
+class UserRegisterSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(write_only=True, validators=[UniqueValidator(User.objects.all())])
+    email = serializers.EmailField(validators=[UniqueValidator(User.objects.all())])
+    password = serializers.CharField(write_only=True, validators=[validate_password], style={"input_type": "password"})
+    password_confirmation = serializers.CharField(write_only=True, style={"input_type": "password"})
 
-#     class Meta:
-#         model = User
-#         fields = ("username", "email", "password", "password_confirmation")
+    class Meta:
+        model = User
+        fields = ("username", "email", "password", "password_confirmation")
 
-#     def validate(self, attrs):
-#         if attrs.get("password") != attrs.get("password_confirmation"):
-#             raise serializers.ValidationError({"password": _("Password fields didn't match.")}, code="authorization")
+    def validate(self, attrs):
+        if attrs.get("password") != attrs.get("password_confirmation"):
+            raise serializers.ValidationError({"password": _("Password fields didn't match.")}, code="authorization")
 
-#         return attrs
-
-#     def create(self, validated_data):
-#         user = User.objects.create_user(username=validated_data["username"], email=validated_data["email"])
-#         user.set_password(validated_data["password"])
-#         user.is_active = True
-#         user.save()
-
-#         return user
+        return attrs
 
 
-## here
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True, style={"input_type": "password"})
+
+    class Meta:
+        fields = ("username", "password")
 
 
 # class Festival2Serializer(ModelSerializer):
