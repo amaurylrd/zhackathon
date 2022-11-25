@@ -171,8 +171,9 @@ class RatingViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPIV
         "create": serializers.RatingDetailSerializer,
         "update": serializers.RatingDetailSerializer,
         "partial_update": serializers.RatingDetailSerializer,
+        # "xxx": serializers.EmptySerializer,
     }
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_class = RatingFilterSet
     search_fields = ["festival"]
@@ -180,6 +181,9 @@ class RatingViewSet(BaseViewSet, generics.ListCreateAPIView, generics.UpdateAPIV
 
     # TODO faire has_rate
     # TODO pourquoi put / patch sont en RatingListSerializer sur le site
+    # @action(detail=False, methods=["GET"])
+    # def xxx(self, request, *args, **kwargs):
+    #     return Response(status=status.HTTP_101_SWITCHING_PROTOCOLS)
 
     def update(self, request, *args, **kwargs):
         return self.__has_permission(super().update, request, *args, **kwargs)
